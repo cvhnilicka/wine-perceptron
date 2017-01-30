@@ -8,14 +8,15 @@ import java.math.*;
 
 class Perceptron {
 	static int NUM_FEATURES = 0;
-	static int NUM_INSTANCES = 0;
+	static int NUM_TRAINING = 0;
 	static int NUM_TUNE = 0;
+	static int NUM_TEST = 0;
 	static double LEARNING_RATE = 0.1;
 	static int theta = 0;
 	static int[][] training;
 	static int[][] tuning;
+	static int[][] testing;
 	static int[] outputs;
-	static int[] outputs_tune;
 	static String class1, class2;
 
 	public static void main(String[] args) {
@@ -26,7 +27,7 @@ class Perceptron {
 		readFile(args[0], 0);
 		readFile(args[1], 1);
 
-		// System.out.println("HERE LAST");
+		System.out.println("EVERYTHING IS READ IN");
 
 		double[] weights = new double[NUM_FEATURES + 1];   // features plus bias
 		double localError, globalError;
@@ -42,7 +43,7 @@ class Perceptron {
 		do {
 			itr++;
 			globalError = 0;
-			for( p = 0; p < NUM_INSTANCES; p++) {
+			for( p = 0; p < NUM_TRAINING; p++) {
 				output = calcOutput(theta, weights, training, p);
 
 				localError = outputs[p] - output;
@@ -57,127 +58,131 @@ class Perceptron {
 			}
 		} while(globalError != 0);
 
-		// readFile(args[1]);
-		// itr = 0;
-		// do {
-		// 	itr++;
-		// 	globalError = 0;
-		// 	for( p = 0; p < NUM_INSTANCES; p++) {
-		// 		output = calcOutput(theta, weights, features, p);
-
-		// 		localError = outputs[p] - output;
-
-		// 		globalError += (localError*localError);
-		// 	}
-		// } while(globalError != 0 && itr<=1000);
-
-		// System.out.println("RMSE = " + globalError/NUM_INSTANCES);
-
-
-
 	}
-	
-	public static void readFile(String filename, int arg) {
+
+	public static void readFile(String filename, int set) {
 		Scanner in;
 
 		try {
 			in = new Scanner(new File(filename));
 			int linecount = 0;
 			Boolean skip = false;
-			int i;
 			int entries = 0;
-			while(in.hasNext()){
+			while(in.hasNext()) {
 				String line = in.nextLine().trim();
 
-
-				// skip the blank lines
 				if(line.length() == 0 || (line.charAt(0) == '/' && line.charAt(1) == '/')) {
 					continue;
 				}
 
 				if(skip == false) {
 					NUM_FEATURES = Integer.parseInt(line);
-					System.out.println("Number of features: " + NUM_FEATURES);		
 					skip = true;
 				} else {
+					
 					String[] split = line.split(" ");
 					if (linecount == 21) {
 						class1 = split[0];
 					}
-					if (linecount == 22){
+					if (linecount == 22) {
 						class2 = split[0];
 					}
-					if(linecount == 23){
-						System.out.println(split[0]);
-						if (arg == 0){
-							NUM_INSTANCES = Integer.parseInt(split[0]);
-							training = featureTable(NUM_INSTANCES);
-							for(int k = 0; k < NUM_INSTANCES; k++){
-								training[k] = new int[NUM_FEATURES];
-							}
-						} else if (arg == 1) {
-							NUM_TUNE = Integer.parseInt(split[0]);
-							tuning = featureTable(NUM_TUNE);
-							for (int k = 0; k < NUM_TUNE; k++) {
-								tuning[k] = new int[NUM_TUNE];
-							}
-							outputs_tune = new int[NUM_TUNE];
+					if(linecount == 23) {
+						if(set == 0) {
+							NUM_TRAINING = Integer.parseInt(line);
+							outputs = new int[NUM_TRAINING];
+						} else if (set == 1) {
+							NUM_TUNE = Integer.parseInt(line);
+						} else if (set == 2) {
+							NUM_TEST = Integer.parseInt(line);
 						}
-						outputs = new int[NUM_INSTANCES];
+						if(set == 0) {
+							training = tableInit(NUM_TRAINING);
+						} else if (set == 1) {
+							tuning = tableInit(NUM_TUNE);
+						} else if (set == 2) {
+							testing = tableInit(NUM_TEST);
+						}
+						
 					} else if (linecount > 23) {
-						// System.out.println("split length: " + split.length);
-						if (split[1].equals(class1)) {
-							System.out.println(class1);
-							for(i = 2; i < 21; i++){
+						System.out.println("ENTRY: " + entries + "\nLINECOUNT: " + linecount + "SET: " + set);
+						System.out.println("LINE: " + line);
+						if(split[1].equals(class1)) {
+							System.out.println("MADE IT HERE");
+							for (int i = 2; i < 22; i++){
 								if(split[i].equals("F")) {
 									System.out.print(" F ");
-									training[entries][i-2] = 0;
-									
+									if(set == 0){
+										System.out.println(0);
+										training[entries][i-2] = 0;	
+									} else if (set == 1) {
+										tuning[entries][i-2] = 0;
+									} else if (set == 2) {
+										testing[entries][i-2] = 0;
+									}
 								} else {
-									training[entries][i-2] = 1;
+									System.out.println("NOW HERE");
+									if(set == 0){
+										System.out.println("AHHHHHHHHHHH");
+										training[entries][i-2] = 1;	
+									} else if (set == 1) {
+										tuning[entries][i-2] = 1;
+									} else if (set == 2) {
+										testing[entries][i-2] = 1;
+									}
 									System.out.print("  T  ");
 								}
 							}
+							System.out.println("SHIT");
 							outputs[entries] = 0;
 							System.out.println();
 						} else {
-							System.out.println(class2);
-							for(i = 2; i < 21; i++){
+							System.out.println(7);
+							for(int i = 2; i < 22; i++){
+								System.out.println("I-2: " + (i-2));
 								if(split[i].equals("F")) {
 									System.out.print(" F ");
-									training[entries][i-2] = 0;
-									
+									if(set == 0){
+										System.out.println("BBBBBBBBBBBB");
+										training[entries][i-2] = 0;	
+									} else if (set == 1) {
+										tuning[entries][i-2] = 0;
+									} else if (set == 2) {
+										testing[entries][i-2] = 0;
+									}
 								} else {
-									training[entries][i-2] = 1;
+									if(set == 0){
+										System.out.println(3);
+										training[entries][i-2] = 1;	
+									} else if (set == 1) {
+										tuning[entries][i-2] = 1;
+									} else if (set == 2) {
+										testing[entries][i-2] = 1;
+									}
 									System.out.print("  T  ");
 								}
 							}
+							System.out.println("FUCK");
 							outputs[entries] = 1;
 							System.out.println();
-						}
-
+						} 
+						entries++;
 					}
 					
-
 				}
-
-
-
-
+				
 				linecount++;
-				
-				
-
-
-			}
-
-		}
-		catch(FileNotFoundException e) {
+			}	
+		} catch(FileNotFoundException e) {
 			System.err.println("Could not find file.");
 			System.exit(1);
 		}
 
+	}
 
+	public static int[][] tableInit(int numElements) {
+		int[][] temp = new int[numElements][NUM_FEATURES];
+		return temp;
 	}
 
 	private static int calcOutput(int theta, double[] weights, int[][] inputs, int entry){
@@ -202,5 +207,109 @@ class Perceptron {
 		int[][] temp = new int[numinst][];
 		return temp;
 	}
+	
+	// public static void readFile(String filename, int arg) {
+	// 	Scanner in;
+
+	// 	try {
+	// 		in = new Scanner(new File(filename));
+	// 		int linecount = 0;
+	// 		Boolean skip = false;
+	// 		int i;
+	// 		int entries = 0;
+	// 		while(in.hasNext()){
+	// 			String line = in.nextLine().trim();
+
+
+	// 			// skip the blank lines
+	// 			if(line.length() == 0 || (line.charAt(0) == '/' && line.charAt(1) == '/')) {
+	// 				continue;
+	// 			}
+
+	// 			if(skip == false) {
+	// 				NUM_FEATURES = Integer.parseInt(line);
+	// 				System.out.println("Number of features: " + NUM_FEATURES);		
+	// 				skip = true;
+	// 			} else {
+	// 				String[] split = line.split(" ");
+	// 				if (linecount == 21) {
+	// 					class1 = split[0];
+	// 				}
+	// 				if (linecount == 22){
+	// 					class2 = split[0];
+	// 				}
+	// 				if(linecount == 23){
+	// 					System.out.println(split[0]);
+	// 					if (arg == 0){
+	// 						NUM_INSTANCES = Integer.parseInt(split[0]);
+	// 						training = featureTable(NUM_INSTANCES);
+	// 						for(int k = 0; k < NUM_INSTANCES; k++){
+	// 							training[k] = new int[NUM_FEATURES];
+	// 						}
+	// 					} else if (arg == 1) {
+	// 						NUM_TUNE = Integer.parseInt(split[0]);
+	// 						tuning = featureTable(NUM_TUNE);
+	// 						for (int k = 0; k < NUM_TUNE; k++) {
+	// 							tuning[k] = new int[NUM_TUNE];
+	// 						}
+	// 						outputs_tune = new int[NUM_TUNE];
+	// 					}
+	// 					outputs = new int[NUM_INSTANCES];
+	// 				} else if (linecount > 23) {
+	// 					// System.out.println("split length: " + split.length);
+	// 					if (split[1].equals(class1)) {
+	// 						System.out.println(class1);
+	// 						for(i = 2; i < 21; i++){
+	// 							if(split[i].equals("F")) {
+	// 								System.out.print(" F ");
+	// 								training[entries][i-2] = 0;
+
+	// 							} else {
+	// 								training[entries][i-2] = 1;
+	// 								System.out.print("  T  ");
+	// 							}
+	// 						}
+	// 						outputs[entries] = 0;
+	// 						System.out.println();
+	// 					} else {
+	// 						System.out.println(class2);
+	// 						for(i = 2; i < 21; i++){
+	// 							if(split[i].equals("F")) {
+	// 								System.out.print(" F ");
+	// 								training[entries][i-2] = 0;
+
+	// 							} else {
+	// 								training[entries][i-2] = 1;
+	// 								System.out.print("  T  ");
+	// 							}
+	// 						}
+	// 						outputs[entries] = 1;
+	// 						System.out.println();
+	// 					}
+
+	// 				}
+
+
+	// 			}
+
+
+
+
+	// 			linecount++;
+
+
+
+
+	// 		}
+
+	// 	}
+	// 	catch(FileNotFoundException e) {
+	// 		System.err.println("Could not find file.");
+	// 		System.exit(1);
+	// 	}
+
+
+	// }
+
 
 }
