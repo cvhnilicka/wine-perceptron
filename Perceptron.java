@@ -9,11 +9,13 @@ import java.math.*;
 class Perceptron {
 	static int NUM_FEATURES = 0;
 	static int NUM_INSTANCES = 0;
+	static int NUM_TUNE = 0;
 	static double LEARNING_RATE = 0.1;
 	static int theta = 0;
-	static int[][] features;
-	static int[][] testing;
+	static int[][] training;
+	static int[][] tuning;
 	static int[] outputs;
+	static int[] outputs_tune;
 	static String class1, class2;
 
 	public static void main(String[] args) {
@@ -21,7 +23,8 @@ class Perceptron {
 			System.err.println("Usage: java perceptron <filename>");
 			System.exit(1);
 		}
-		readFile(args[0]);
+		readFile(args[0], 0);
+		readFile(args[1], 1);
 
 		// System.out.println("HERE LAST");
 
@@ -40,12 +43,13 @@ class Perceptron {
 			itr++;
 			globalError = 0;
 			for( p = 0; p < NUM_INSTANCES; p++) {
-				output = calcOutput(theta, weights, features, p);
+				output = calcOutput(theta, weights, training, p);
 
 				localError = outputs[p] - output;
 
+				// System.out.println("P: " + p);
 				for(int i = 0; i < NUM_FEATURES; i++){
-					weights[i] += LEARNING_RATE * localError * features[i][p];
+					weights[i] += LEARNING_RATE * localError * training[p][i];
 				}
 				weights[NUM_FEATURES] += LEARNING_RATE * localError;
 
@@ -53,27 +57,27 @@ class Perceptron {
 			}
 		} while(globalError != 0);
 
-		readFile(args[1]);
-		itr = 0;
-		do {
-			itr++;
-			globalError = 0;
-			for( p = 0; p < NUM_INSTANCES; p++) {
-				output = calcOutput(theta, weights, features, p);
+		// readFile(args[1]);
+		// itr = 0;
+		// do {
+		// 	itr++;
+		// 	globalError = 0;
+		// 	for( p = 0; p < NUM_INSTANCES; p++) {
+		// 		output = calcOutput(theta, weights, features, p);
 
-				localError = outputs[p] - output;
+		// 		localError = outputs[p] - output;
 
-				globalError += (localError*localError);
-			}
-		} while(globalError != 0 && itr<=1000);
+		// 		globalError += (localError*localError);
+		// 	}
+		// } while(globalError != 0 && itr<=1000);
 
-		System.out.println("RMSE = " + globalError/NUM_INSTANCES);
+		// System.out.println("RMSE = " + globalError/NUM_INSTANCES);
 
 
 
 	}
 	
-	public static void readFile(String filename) {
+	public static void readFile(String filename, int arg) {
 		Scanner in;
 
 		try {
@@ -93,8 +97,7 @@ class Perceptron {
 
 				if(skip == false) {
 					NUM_FEATURES = Integer.parseInt(line);
-					System.out.println("Number of features: " + NUM_FEATURES);
-					features = featureTable(NUM_FEATURES);
+					System.out.println("Number of features: " + NUM_FEATURES);		
 					skip = true;
 				} else {
 					String[] split = line.split(" ");
@@ -106,9 +109,19 @@ class Perceptron {
 					}
 					if(linecount == 23){
 						System.out.println(split[0]);
-						NUM_INSTANCES = Integer.parseInt(split[0]);
-						for(int k = 0; k < NUM_FEATURES; k++){
-							features[k] = new int[NUM_INSTANCES];
+						if (arg == 0){
+							NUM_INSTANCES = Integer.parseInt(split[0]);
+							training = featureTable(NUM_INSTANCES);
+							for(int k = 0; k < NUM_INSTANCES; k++){
+								training[k] = new int[NUM_FEATURES];
+							}
+						} else if (arg == 1) {
+							NUM_TUNE = Integer.parseInt(split[0]);
+							tuning = featureTable(NUM_TUNE);
+							for (int k = 0; k < NUM_TUNE; k++) {
+								tuning[k] = new int[NUM_TUNE];
+							}
+							outputs_tune = new int[NUM_TUNE];
 						}
 						outputs = new int[NUM_INSTANCES];
 					} else if (linecount > 23) {
@@ -118,10 +131,10 @@ class Perceptron {
 							for(i = 2; i < 21; i++){
 								if(split[i].equals("F")) {
 									System.out.print(" F ");
-									features[i-2][entries] = 0;
+									training[entries][i-2] = 0;
 									
 								} else {
-									features[i-2][entries] = 1;
+									training[entries][i-2] = 1;
 									System.out.print("  T  ");
 								}
 							}
@@ -132,10 +145,10 @@ class Perceptron {
 							for(i = 2; i < 21; i++){
 								if(split[i].equals("F")) {
 									System.out.print(" F ");
-									features[i-2][entries] = 0;
+									training[entries][i-2] = 0;
 									
 								} else {
-									features[i-2][entries] = 1;
+									training[entries][i-2] = 1;
 									System.out.print("  T  ");
 								}
 							}
@@ -171,7 +184,7 @@ class Perceptron {
 		double sum = 0;
 
 		for(int i = 0; i < NUM_FEATURES; i++){
-			sum += weights[i] * inputs[i][entry];
+			sum += weights[i] * inputs[entry][i];
 		}
 		sum += weights[NUM_FEATURES];
 		return (sum>=theta) ? 1 : 0;
@@ -185,8 +198,8 @@ class Perceptron {
 		return ret;
 	}
 
-	private static int[][] featureTable(int numfeat) {
-		int[][] temp = new int[numfeat][];
+	private static int[][] featureTable(int numinst) {
+		int[][] temp = new int[numinst][];
 		return temp;
 	}
 
