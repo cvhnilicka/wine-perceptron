@@ -30,7 +30,7 @@ class Perceptron {
 		readFile(args[1], 1);
 		readFile(args[2], 2);
 
-		System.out.println("EVERYTHING IS READ IN");
+		// System.out.println("EVERYTHING IS READ IN");
 
 		double[] weights = new double[NUM_FEATURES + 1];   // features plus bias
 		double[] lastWeights = weights;
@@ -45,6 +45,7 @@ class Perceptron {
 		itr = 0;
 		gradient = 0;
 		lastGradient = 0;
+		float tunAccuracy = 0.000f;
 
 		do {
 			itr++;
@@ -61,8 +62,8 @@ class Perceptron {
 				weights[NUM_FEATURES] += LEARNING_RATE * localError;
 				globalError += (localError*localError);
 			}
-			if (itr % 5 == 0) {
-				float tunAccuracy;
+			if (itr % 4 == 0 && itr >= (NUM_TRAINING/3)) {
+				
 				int correct = 0;
 				for (int i = 0; i < NUM_TUNE; i++) {
 					outputcheck = calcOutput(theta, weights, tuning, i);
@@ -73,19 +74,23 @@ class Perceptron {
 					// System.out.println("NUM CORRECT: " + correct);
 				}
 				tunAccuracy = (float)((correct* 100.0f)/NUM_TUNE);
-				System.out.println("tunAccuracy: " + tunAccuracy);
-				if(tunAccuracy > 85) {
+				// System.out.println("tunAccuracy: " + tunAccuracy);
+				if(tunAccuracy > 90) {
 					gradient++;
 					if(lastGradient < gradient) {
 						lastWeights = weights;
 					}
-				} else {
 					lastGradient = gradient;
+				} else {
 					gradient = 0;
 				}
 			}
 
-		} while((lastGradient < 3 || gradient < 3) && itr < 10000);
+		} while(lastGradient < 3);
+
+		// System.out.println("lastGradient < 3: " + (lastGradient < 3));
+
+		System.out.println("ITR: " + itr + "\nGRADIENT: " + lastGradient + "\ntunAccuracy: " + tunAccuracy);
 
 		weights = lastWeights;
 
@@ -220,7 +225,7 @@ class Perceptron {
 							}
 							// System.out.println("FUCK");
 							outputs[entries] = 1;
-							System.out.println();
+							// System.out.println();
 						} 
 						entries++;
 					}
