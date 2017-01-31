@@ -17,46 +17,92 @@ class Perceptron {
 	static int[][] tuning;
 	static int[][] testing;
 	static int[] outputs;
+	static int[] tun_outputs;
+	static int[] test_outputs;
 	static String class1, class2;
 
 	public static void main(String[] args) {
-		if (args.length < 2) {
+		if (args.length < 3) {
 			System.err.println("Usage: java perceptron <filename>");
 			System.exit(1);
 		}
 		readFile(args[0], 0);
 		readFile(args[1], 1);
+		readFile(args[2], 2);
 
 		System.out.println("EVERYTHING IS READ IN");
 
 		double[] weights = new double[NUM_FEATURES + 1];   // features plus bias
+		double[] lastWeights = weights;
 		double localError, globalError;
 
 		for(int i = 0; i < NUM_FEATURES + 1; i++){
 			weights[i] = randomNumberFormatted(0,1);
 		}
 
-		int itr, output, p;
+		int itr, output, p, outputcheck, gradient, lastGradient;
 
 		itr = 0;
+		gradient = 0;
+		lastGradient = 0;
 
 		do {
 			itr++;
 			globalError = 0;
+			//  iterate through all training (1 epoch)
 			for( p = 0; p < NUM_TRAINING; p++) {
 				output = calcOutput(theta, weights, training, p);
 
 				localError = outputs[p] - output;
-
-				// System.out.println("P: " + p);
 				for(int i = 0; i < NUM_FEATURES; i++){
 					weights[i] += LEARNING_RATE * localError * training[p][i];
 				}
-				weights[NUM_FEATURES] += LEARNING_RATE * localError;
 
+				weights[NUM_FEATURES] += LEARNING_RATE * localError;
 				globalError += (localError*localError);
 			}
-		} while(globalError != 0);
+			if (itr % 5 == 0) {
+				float tunAccuracy;
+				int correct = 0;
+				for (int i = 0; i < NUM_TUNE; i++) {
+					outputcheck = calcOutput(theta, weights, tuning, i);
+					// System.out.println("outputcheck == tun_outputs[i]" + outputcheck + "  " + tun_outputs[i]);
+					if(outputcheck == tun_outputs[i]) {
+						correct++;
+					}
+					// System.out.println("NUM CORRECT: " + correct);
+				}
+				tunAccuracy = (float)((correct* 100.0f)/NUM_TUNE);
+				System.out.println("tunAccuracy: " + tunAccuracy);
+				if(tunAccuracy > 85) {
+					gradient++;
+					if(lastGradient < gradient) {
+						lastWeights = weights;
+					}
+				} else {
+					lastGradient = gradient;
+					gradient = 0;
+				}
+			}
+
+		} while((lastGradient < 3 || gradient < 3) && itr < 10000);
+
+		weights = lastWeights;
+
+		float accuracy;
+		int correct = 0;
+		for(int i =0; i < NUM_TEST; i++) {
+			output = calcOutput(theta, weights, testing, i);
+			if(output == test_outputs[i]) {
+				correct++;
+			}
+
+		}
+		accuracy = (float)((correct * 100.0f)/NUM_TEST);
+
+		System.out.println("TESTING accuracy: " + accuracy);
+
+
 
 	}
 
@@ -100,69 +146,79 @@ class Perceptron {
 							training = tableInit(NUM_TRAINING);
 						} else if (set == 1) {
 							tuning = tableInit(NUM_TUNE);
+							tun_outputs = new int[NUM_TUNE];
 						} else if (set == 2) {
 							testing = tableInit(NUM_TEST);
+							test_outputs = new int[NUM_TEST];
 						}
 						
 					} else if (linecount > 23) {
-						System.out.println("ENTRY: " + entries + "\nLINECOUNT: " + linecount + "SET: " + set);
-						System.out.println("LINE: " + line);
+						// System.out.println("ENTRY: " + entries + "\nLINECOUNT: " + linecount + "SET: " + set);
+						// System.out.println("LINE: " + line);
 						if(split[1].equals(class1)) {
-							System.out.println("MADE IT HERE");
+							// System.out.println("MADE IT HERE");
 							for (int i = 2; i < 22; i++){
 								if(split[i].equals("F")) {
-									System.out.print(" F ");
+									// System.out.print(" F ");
 									if(set == 0){
-										System.out.println(0);
+										// System.out.println(0);
 										training[entries][i-2] = 0;	
 									} else if (set == 1) {
 										tuning[entries][i-2] = 0;
+										tun_outputs[entries] = 0;
 									} else if (set == 2) {
 										testing[entries][i-2] = 0;
+										test_outputs[entries] = 0;
 									}
 								} else {
-									System.out.println("NOW HERE");
+									// System.out.println("NOW HERE");
 									if(set == 0){
-										System.out.println("AHHHHHHHHHHH");
+										// System.out.println("AHHHHHHHHHHH");
 										training[entries][i-2] = 1;	
 									} else if (set == 1) {
 										tuning[entries][i-2] = 1;
+										tun_outputs[entries] = 1;
 									} else if (set == 2) {
 										testing[entries][i-2] = 1;
+										test_outputs[entries] = 1;
 									}
-									System.out.print("  T  ");
+									// System.out.print("  T  ");
 								}
 							}
-							System.out.println("SHIT");
+							// System.out.println("SHIT");
 							outputs[entries] = 0;
-							System.out.println();
+							// System.out.println();
 						} else {
-							System.out.println(7);
+							// System.out.println(7);
 							for(int i = 2; i < 22; i++){
-								System.out.println("I-2: " + (i-2));
+								// System.out.println("I-2: " + (i-2));
 								if(split[i].equals("F")) {
-									System.out.print(" F ");
+									// System.out.print(" F ");
 									if(set == 0){
-										System.out.println("BBBBBBBBBBBB");
+										// System.out.println("BBBBBBBBBBBB");
 										training[entries][i-2] = 0;	
 									} else if (set == 1) {
 										tuning[entries][i-2] = 0;
+										tun_outputs[entries] = 0;
 									} else if (set == 2) {
 										testing[entries][i-2] = 0;
+										test_outputs[entries] = 0;
 									}
 								} else {
 									if(set == 0){
-										System.out.println(3);
+										// System.out.println(3);
 										training[entries][i-2] = 1;	
 									} else if (set == 1) {
 										tuning[entries][i-2] = 1;
+										tun_outputs[entries] = 1;
 									} else if (set == 2) {
 										testing[entries][i-2] = 1;
+										test_outputs[entries] = 1;
 									}
-									System.out.print("  T  ");
+									// System.out.print("  T  ");
 								}
 							}
-							System.out.println("FUCK");
+							// System.out.println("FUCK");
 							outputs[entries] = 1;
 							System.out.println();
 						} 
@@ -207,109 +263,5 @@ class Perceptron {
 		int[][] temp = new int[numinst][];
 		return temp;
 	}
-	
-	// public static void readFile(String filename, int arg) {
-	// 	Scanner in;
-
-	// 	try {
-	// 		in = new Scanner(new File(filename));
-	// 		int linecount = 0;
-	// 		Boolean skip = false;
-	// 		int i;
-	// 		int entries = 0;
-	// 		while(in.hasNext()){
-	// 			String line = in.nextLine().trim();
-
-
-	// 			// skip the blank lines
-	// 			if(line.length() == 0 || (line.charAt(0) == '/' && line.charAt(1) == '/')) {
-	// 				continue;
-	// 			}
-
-	// 			if(skip == false) {
-	// 				NUM_FEATURES = Integer.parseInt(line);
-	// 				System.out.println("Number of features: " + NUM_FEATURES);		
-	// 				skip = true;
-	// 			} else {
-	// 				String[] split = line.split(" ");
-	// 				if (linecount == 21) {
-	// 					class1 = split[0];
-	// 				}
-	// 				if (linecount == 22){
-	// 					class2 = split[0];
-	// 				}
-	// 				if(linecount == 23){
-	// 					System.out.println(split[0]);
-	// 					if (arg == 0){
-	// 						NUM_INSTANCES = Integer.parseInt(split[0]);
-	// 						training = featureTable(NUM_INSTANCES);
-	// 						for(int k = 0; k < NUM_INSTANCES; k++){
-	// 							training[k] = new int[NUM_FEATURES];
-	// 						}
-	// 					} else if (arg == 1) {
-	// 						NUM_TUNE = Integer.parseInt(split[0]);
-	// 						tuning = featureTable(NUM_TUNE);
-	// 						for (int k = 0; k < NUM_TUNE; k++) {
-	// 							tuning[k] = new int[NUM_TUNE];
-	// 						}
-	// 						outputs_tune = new int[NUM_TUNE];
-	// 					}
-	// 					outputs = new int[NUM_INSTANCES];
-	// 				} else if (linecount > 23) {
-	// 					// System.out.println("split length: " + split.length);
-	// 					if (split[1].equals(class1)) {
-	// 						System.out.println(class1);
-	// 						for(i = 2; i < 21; i++){
-	// 							if(split[i].equals("F")) {
-	// 								System.out.print(" F ");
-	// 								training[entries][i-2] = 0;
-
-	// 							} else {
-	// 								training[entries][i-2] = 1;
-	// 								System.out.print("  T  ");
-	// 							}
-	// 						}
-	// 						outputs[entries] = 0;
-	// 						System.out.println();
-	// 					} else {
-	// 						System.out.println(class2);
-	// 						for(i = 2; i < 21; i++){
-	// 							if(split[i].equals("F")) {
-	// 								System.out.print(" F ");
-	// 								training[entries][i-2] = 0;
-
-	// 							} else {
-	// 								training[entries][i-2] = 1;
-	// 								System.out.print("  T  ");
-	// 							}
-	// 						}
-	// 						outputs[entries] = 1;
-	// 						System.out.println();
-	// 					}
-
-	// 				}
-
-
-	// 			}
-
-
-
-
-	// 			linecount++;
-
-
-
-
-	// 		}
-
-	// 	}
-	// 	catch(FileNotFoundException e) {
-	// 		System.err.println("Could not find file.");
-	// 		System.exit(1);
-	// 	}
-
-
-	// }
-
 
 }
