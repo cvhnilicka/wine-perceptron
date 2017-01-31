@@ -37,7 +37,7 @@ class Perceptron {
 		double localError, globalError;
 
 		for(int i = 0; i < NUM_FEATURES + 1; i++){
-			weights[i] = randomNumberFormatted(0,1);
+			weights[i] = 0 + Math.random() * (1 - 0);
 		}
 
 		int itr, output, p, outputcheck, gradient, lastGradient;
@@ -75,7 +75,7 @@ class Perceptron {
 				}
 				tunAccuracy = (float)((correct* 100.0f)/NUM_TUNE);
 				// System.out.println("tunAccuracy: " + tunAccuracy);
-				if(tunAccuracy > 90) {
+				if(tunAccuracy > 85) {
 					gradient++;
 					if(lastGradient < gradient) {
 						lastWeights = weights;
@@ -256,13 +256,6 @@ class Perceptron {
 		return (sum>=theta) ? 1 : 0;
 	}
 
-	private static double randomNumberFormatted(int min, int max) {
-		DecimalFormat df = new DecimalFormat("#.###");
-		double decimal = min + Math.random() * (max - min);
-		String formattedDecimal = df.format(decimal);
-		double ret = Double.parseDouble(formattedDecimal);
-		return ret;
-	}
 
 	private static int[][] featureTable(int numinst) {
 		int[][] temp = new int[numinst][];
